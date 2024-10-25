@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Events;
 using Player;
 using Player.ActionHandlers;
+using Unity.Mathematics;
 using UnityEngine;
 
 
@@ -154,6 +156,23 @@ namespace Connection
 
             if (isCompleted && _completionsByTargetNode.Values.All(c => c))
                 EventsController.Fire(new EventModels.Game.TargetColorNodesFilled());
+        }
+
+        public Vector4 GetNodesBounds()
+        {
+            Vector4 result = new Vector4();
+            if (_nodes.Length > 0)
+                result = _nodes[0].CenterPosition;
+
+            foreach (var colorNode in _nodes)
+            {
+                result.x = Mathf.Min(colorNode.CenterPosition.x, result.x);
+                result.y = Mathf.Max(colorNode.CenterPosition.x, result.y);
+                result.z = Mathf.Min(colorNode.CenterPosition.y, result.z);
+                result.w = Mathf.Max(colorNode.CenterPosition.y, result.w);
+            }
+
+            return result;
         }
     }
 }
