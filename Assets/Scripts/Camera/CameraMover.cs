@@ -12,6 +12,7 @@ public class CameraMover : MonoBehaviour
     [SerializeField, Range(0, 1), Tooltip("in percent of screenSize")] private float mapBorder = .5f;
     [SerializeField, Range(0, 1), Tooltip("0 is static, 1 is without smooth")] float dragSmooth = .2f;
     [SerializeField] bool shouldInertialMotion = true;
+    private const float targetFrameRate = 60;
 
     private ColorConnectionManager _colorConnectionManager;
     private ClickHandler _clickHandler;
@@ -31,8 +32,8 @@ public class CameraMover : MonoBehaviour
         _clickHandler = ClickHandler.Instance;
         _cameraDefaultPosition = transform.position;
 
-        var tempCamera = GetComponent<CameraHolder>().MainCamera;
-        _cameraSize = new float2(tempCamera.orthographicSize * tempCamera.aspect, tempCamera.orthographicSize);
+        var mainCamera = CameraHolder.Instance.MainCamera;
+        _cameraSize = new float2(mainCamera.orthographicSize * mainCamera.aspect, mainCamera.orthographicSize);
 
         ScenesChanger.SceneLoadedEvent += OnSceneLoadedEvent;
         _clickHandler.PointerDownEvent += OnPointerDown;
@@ -65,19 +66,19 @@ public class CameraMover : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         if (isDrug)
         {
             var targetPoint = CameraHolder.Instance.MainCamera.ScreenToWorldPoint(Input.mousePosition);
             var dragVector = _pointerDownPosition - targetPoint;
-            var newPosition = transform.position + dragVector * dragSmooth;
+            var newPosition = transform.position + dragVector * dragSmooth * Time.deltaTime * targetFrameRate;
             MoveTo(newPosition);
         }
         else if (isSmooth)
         {
             if (Vector3.Magnitude(transform.position - _smoothEndPosition) > .1f)
-                MoveTo(Vector3.Lerp(transform.position, _smoothEndPosition, dragSmooth));
+                MoveTo(Vector3.Lerp(transform.position, _smoothEndPosition, dragSmooth * Time.deltaTime * targetFrameRate));
             else
                 isSmooth = false;
         }
